@@ -21,8 +21,8 @@ public partial class _Default : System.Web.UI.Page
 
         history.InnerHtml += result.InnerHtml;
 
-        result.InnerHtml = "----------------------------------------------------------- $$ $$";
-        result.InnerHtml += "Решение: " + func.ToLatex();
+        result.InnerHtml = "<hr />";
+        result.InnerHtml += func.ToLatex() + "$$ $$ Решение: ";
         result.InnerHtml += "$$ = " + Convert.ToString(func.Calculate()) + "$$";
         result.InnerHtml += "\nУпрощение: ";
 

@@ -15,21 +15,31 @@
     <title></title>
 </head>
 <body>
-    <form id="form1" runat="server">
-        <div>
-            <asp:TextBox ID="TextBox1" runat="server" Width="659px"></asp:TextBox>        
-            <asp:Button ID="Button1" runat="server" Text="Решить" OnClick="Button1_Click" Width="238px" />
+    <div style="margin-left: 10%; margin-right: 10%">
+        <form id="form1" runat="server">
+            <div>
+                <asp:TextBox ID="TextBox1" runat="server" Width="770"></asp:TextBox>        
+                <asp:Button ID="Button1" runat="server" Text="Решить" OnClick="Button1_Click" Width="230px"/>
+            </div>
+            <div id="result" runat="server">
+            </div>
+        </form>
+        <div id="history" runat="server">
+            <hr /> $$ $$
+            <p>История решения математических выражений подобно этому \(\frac{1}{3}\)</p>
+            <p>Примеры:</p>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="text-align: center; border: 2px solid slategray;">
+                    <td>2^3+8*(7/5)</td>
+                    <td>9*(11-8+4x)*sin(7/(2x-5))</td>
+                </tr>
+                <tr style="border: 2px solid slategray;">
+                    <td>$$2^3+8\cdot\frac{7}{5}$$</td>
+                    <td>$$9\cdot \left(11 -8 + 4 \cdot x \right)\cdot sin \left(\frac{7}{2\cdot x-5}\right)$$</td>
+                </tr>
+            </table>
+            <hr />
         </div>
-    <div id="result" runat="server">
-    </div>
-    </form>
-    <div id="history" runat="server">
-        -------------------------------------------------------------------------------------- $$ $$
-        История решения математических выражений подобно этому \(\frac{1}{3}\) или этому:
-        $$x = {-b \pm \sqrt{b^2-4ac} \over 2a}.$$
-    </div>
-    <div style="left: auto; bottom: auto; right: auto; top: auto">
-        
     </div>
 </body>
 </html>

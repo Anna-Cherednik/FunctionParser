@@ -9,7 +9,7 @@
     <script type="text/x-mathjax-config">
         MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
     </script>
-    <script type="text/javascript" async
+    <script type="text/javascript" async="async"
             src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
     </script>
     <title></title>
@@ -29,7 +29,7 @@
         $$x = {-b \pm \sqrt{b^2-4ac} \over 2a}.$$
     </div>
     <div style="left: auto; bottom: auto; right: auto; top: auto">
-        hjhj
+        
     </div>
 </body>
 </html>

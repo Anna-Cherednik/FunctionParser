@@ -302,22 +302,22 @@ namespace FunctionParser
             }
         }
 
-        private TwoOperandFunction createOperFunction(string operation, Function left, Function right)
+        private TwoOperandFunction createOperFunction(string operation, Function right, Function left)
         {
             switch (operation)
             {
                 case "*":
-                    return new Multiple(operation, left, right);
+                    return new Multiple(operation, right, left);
                 case "/":
-                    return new Fraction(operation, left, right);
+                    return new Fraction(operation, right, left);
                 case "+":
-                    return new SummFunction(operation, left, right);
+                    return new SummFunction(operation, right, left);
                 case "-":
-                    return new MinusFunction(operation, left, right);
+                    return new MinusFunction(operation, right, left);
                 case "^":
-                    return new Power(operation, left, right);
+                    return new Power(operation, right, left);
                 default:
-                    return new TwoOperandFunction(operation, left, right);
+                    return new TwoOperandFunction(operation, right, left);
             }
         }
 
@@ -328,8 +328,8 @@ namespace FunctionParser
             {
                 if (terms[i].type == term.number)
                 {
-                    Constant c = new Constant(terms[i].value);
-                    list.Add(c);
+                    Number c = new Number(terms[i].value);
+                    list.Add(c); 
                 }
                 else if (terms[i].type == term.letter)
                 {
@@ -377,9 +377,6 @@ namespace FunctionParser
                 }
             }
 
-            
-            ArrayList temp = new ArrayList();
-            //for 
             int lengthList = list.Count;
 
             string error = "";
@@ -398,21 +395,27 @@ namespace FunctionParser
                                 list.RemoveAt(i + 1);
                                 list.RemoveAt(i + 1);
                                 i -= 1;
-                                if ( (i>=0) && (Enum.IsDefined(typeof(namefunc), (string)((Token)list[i]).value)))
+                                if ((i >= 0) && (Enum.IsDefined(typeof(namefunc), (string)((Token)list[i]).value)))
                                 {
                                     StandartFunction func = new StandartFunction((String)((Token)list[i]).value, (Function)list[i + 1]);
                                     list[i] = func;
                                     list.RemoveAt(i + 1);
                                 }
                             }
-                            else error = "Встречен знак {(,)}, но список токенов не содержит выражение вида (Function)";
+                            else
+                            {
+                                error = "Встречен знак {(,)}, но список токенов не содержит выражение вида (Function)";
+                                ErrorFunction err = new ErrorFunction(error);
+                                list.Clear();
+                                list.Add(err);
+                            }
                         }
                         else if ((String)((Token)list[i]).value == "(")
                             error = "Встречен знак (, но список токенов не содержит выражение вида (Function)";
                     }
                     else error = error = "Встречен неверный токен... ";
                 }
-                for (int i = 0; i < list.Count; i++)
+                for (int i = 1; i < list.Count; i++)  // instead i=0;
                 {
                     if ((list[i] is Token) && (list.Count > i + 1))
                     {
@@ -515,15 +518,6 @@ namespace FunctionParser
 
         public Function Simplify()
         {
-            //double result = this.Calculate();
-            //if (Double.IsNaN(result))
-            //{
-            //    this.tree.RollUp();
-            //    return this.tree;
-            //}
-            //else
-            //    return new Constant(result.ToString());
-            //this.tree = this.tree.RollUp();
             return this.tree.RollUp();
         }
     }
@@ -551,7 +545,7 @@ namespace FunctionParser
 
         public virtual Function RollUp()
         {
-            return null;
+            return new Function();
         }
 
         public virtual string ToLatex()
@@ -567,26 +561,11 @@ namespace FunctionParser
         {
             this.expr = error;
             this.value = Double.NaN;
-        }
-
-        public override double Evaluate()
-        {
-            return value;
-        }
-
-        public override string ToString()
-        {
-            return this.expr;
-        }
-
-        public override bool hasNodeFunction()
-        {
-            return false;
-        }
+        }       
 
         public override Function RollUp()
         {
-            return null;
+            return new ErrorFunction(this.expr);
         }
 
         public override string ToLatex()
@@ -622,26 +601,15 @@ namespace FunctionParser
 
         public override Function RollUp()
         {
-            bool check = false;
-            while ((this.innerNode is Constant) && (!check))
-            // is Function while ((this.innerNode.GetType() != typeof(Constant)) && (!check))
-            {
-                Function node = new Function();
-                node = this.innerNode.RollUp();
-                if (node != null)
-                {
-                    this.innerNode = node;
-                    check = false;
-                }
-                else check = true;
-            }
-            if (this.innerNode is Constant)
+            this.innerNode = this.innerNode.RollUp();
+
+            if (this.innerNode is Number)
             //if (this.innerNode.GetType() == typeof(Constant))
             {
                 //Constant newnode = new Constant(this.innerNode.Evaluate().ToString());
                 return this.innerNode;//newnode;
             }
-            return null;
+            return new BracketFunction(innerNode);
         }
 
         public override string ToLatex()
@@ -735,26 +703,15 @@ namespace FunctionParser
 
         public override Function RollUp()
         {
-            bool check = false;
-            while ((this.rightNode is Constant) && (!check))
-            //while ((this.rightNode.GetType() != typeof(Constant)) && (!check))
-            {
-                Function node = new Function();
-                node = this.rightNode.RollUp();
-                if (node != null)
-                {
-                    this.rightNode = node;
-                    check = false;
-                }
-                else check = true;
-            }
-            if (this.rightNode is Constant)
+            this.rightNode = this.rightNode.RollUp();
+
+            if (this.rightNode is Number)
             //if (this.rightNode.GetType() == typeof(Constant))
             {
-                Constant newnode = new Constant(this.Evaluate().ToString());
+                Number newnode = new Number(this.Evaluate().ToString());
                 return newnode;
             }
-            return null;
+            return new StandartFunction(operation, rightNode);
         }
     }
 
@@ -790,46 +747,33 @@ namespace FunctionParser
 
         public override Function RollUp()
         {
-            bool check = false;
-            while ((!(this.leftNode is Constant) || !(this.rightNode is Constant)) && (!check))
-            //while (((this.leftNode.GetType() != typeof(Constant)) || (this.rightNode.GetType() != typeof(Constant))) && (!check))
-            {
-                Function left = new Function();
-                left = this.leftNode.RollUp();
-                if (left != null)
-                {
-                    this.leftNode = left;
-                }
-                Function right = new Function();
-                right = this.rightNode.RollUp();
-                if (right != null)
-                {
-                    this.rightNode = right;
-                    check = false;
-                }
-                else check = true;
-            }
-            if ((this.leftNode is NameConstant) || (this.rightNode is NameConstant))
+            this.rightNode = this.rightNode.RollUp();
+            this.leftNode = this.leftNode.RollUp();
+
+            if ((this.leftNode is Number) && (this.rightNode is Number))
             //if ((this.leftNode.GetType() == typeof(Constant)) && (this.rightNode.GetType() == typeof(Constant)))
             {
-                if ((this.leftNode is Constant) && (this.rightNode is Constant))
-                {
-                    TwoOperandFunction newnode = new TwoOperandFunction(this.operation, this.rightNode, this.leftNode);
-                    return newnode;
-                }
-                else
-                    return null;
-            }
-            else if ((this.leftNode is Constant) && (this.rightNode is Constant))
-            //if ((this.leftNode.GetType() == typeof(Constant)) && (this.rightNode.GetType() == typeof(Constant)))
-            {
-                Constant newnode = new Constant(this.Evaluate().ToString());
+                Number newnode = new Number(this.Evaluate().ToString());
                 return newnode;
             }
             else
             {
-                TwoOperandFunction newnode = new TwoOperandFunction(this.operation, this.rightNode, this.leftNode);
-                return newnode;
+                TwoOperandFunction newnode;
+                switch (operation)
+                {
+                    case "*":
+                        return newnode = new Multiple(operation, rightNode, leftNode);
+                    case "/":
+                        return newnode = new Fraction(operation, rightNode, leftNode);
+                    case "+":
+                        return newnode = new SummFunction(operation, rightNode, leftNode);
+                    case "-":
+                        return newnode = new MinusFunction(operation, rightNode, leftNode);
+                    case "^":
+                        return newnode = new Power(operation, rightNode, leftNode);
+                    default:
+                        return newnode = new TwoOperandFunction(operation, rightNode, leftNode);                        
+                }
             }
             //return null;
         }
@@ -968,6 +912,11 @@ namespace FunctionParser
         {
             return false;
         }
+
+        public override Function RollUp()
+        {
+            return new Variable(expr);
+        }
     }
 
     public class Constant : Variable
@@ -978,10 +927,12 @@ namespace FunctionParser
             {
                 switch (val)
                 {
-                    case "Pi": case "pi":
+                    case "Pi":  case "pi":
+                        this.expr = "pi";
                         this.value = Math.PI;
                         break;
-                    case "Eps": case "E": case "e":
+                    case "Eps": case "E":   case "e":
+                        this.expr = "e";
                         this.value = Math.E;
                         break;
                     default:
@@ -1005,45 +956,30 @@ namespace FunctionParser
         {
             return false;
         }
+
+        public override Function RollUp()
+        {
+            return new Constant(expr);
+        }
     }
 
     public class NameConstant : Constant
     {
-        public NameConstant(string val) : base(val)
-        {
-                switch (val)
-                {
-                    case "Pi":
-                    case "pi":
-                        this.expr = "pi";
-                        this.value = Math.PI;
-                        break;
-                    case "Eps":
-                    case "E":
-                    case "e":
-                        this.expr = "e";
-                        this.value = Math.E;
-                        break;
-                    default:
-                        this.value = Double.NaN;
-                        break;
-                }
-        }
+        public NameConstant(string val) : base(val) {  }
 
-        public override double Evaluate()
+        public override Function RollUp()
         {
-            return this.value;
-        }
-
-        public override string ToString()
-        {
-            return this.expr;
-        }
-
-        public override bool hasNodeFunction()
-        {
-            return false;
+            return new NameConstant(expr);
         }
     }
 
+    public class Number: Constant
+    {
+        public Number(string val) : base(val) { }
+
+        public override Function RollUp()
+        {
+            return new  Number(expr);
+        }
+    }
 }
